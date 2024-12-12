@@ -1,0 +1,6 @@
+@DanskLogistikAPI_HostAddress = http://localhost:5153
+
+GET {{DanskLogistikAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
