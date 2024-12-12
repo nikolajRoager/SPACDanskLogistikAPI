@@ -4,6 +4,7 @@ using DanskLogistikAPI.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DanskLogistikAPI.Migrations
 {
     [DbContext(typeof(LogisticContext))]
-    partial class LogisticContextModelSnapshot : ModelSnapshot
+    [Migration("20241212140440_SVGSnippet")]
+    partial class SVGSnippet
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,14 +167,14 @@ namespace DanskLogistikAPI.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<string>("SvgContent")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 

@@ -20,9 +20,12 @@
         /// </summary>
         public string Name { get; set; }
 
-        public byte R {  get; set; }
-        public byte G { get; set; }
-        public byte B { get; set; }
+        /// <summary>
+        /// SVG path with colour and outline of the entire country's legally recognized territory
+        /// This may differ from de-facto territory
+        /// </summary>
+        public SVGSnippet DeJureOutline { get; set; }
+
 
         bool Access {  get; set; }
     }

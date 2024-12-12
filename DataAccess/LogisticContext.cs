@@ -14,7 +14,12 @@ namespace DanskLogistikAPI.DataAccess
         {
 
         }
-
+        
+        /// <summary>
+        /// Overwrite a few properties from defaults, such as lengths of strings
+        /// In general I use 64 chars for names, and longtext for svg snippets 
+        /// </summary>
+        /// <param name="modelBuilder"></param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -23,11 +28,7 @@ namespace DanskLogistikAPI.DataAccess
             {
                 entity.HasKey(C => C.Id);
                 entity.Property(C => C.Name).HasMaxLength(64);
-                entity.Property(C => C.R).HasColumnType("tinyint");
-                entity.Property(C => C.G).HasColumnType("tinyint");
-                entity.Property(C => C.B).HasColumnType("tinyint");
             });
-
 
             modelBuilder.Entity<Municipality>(entity =>
             {
@@ -40,8 +41,6 @@ namespace DanskLogistikAPI.DataAccess
                 entity.HasKey(N => N.Id);
                 entity.Property(N => N.Name).HasMaxLength(64);
             });
-
-
 
             modelBuilder.Entity<Connection>(entity =>
             {
@@ -63,6 +62,12 @@ namespace DanskLogistikAPI.DataAccess
                 entity.HasKey(C => C.Id);
                 entity.Property(C => C.Name).HasMaxLength(64).IsRequired(false);
             });
+
+            modelBuilder.Entity<SVGSnippet>(entity =>
+            {
+                entity.HasKey(s => s.Id);
+                entity.Property(s => s.Name).HasMaxLength(64);
+            });
         }
 
 
@@ -70,7 +75,7 @@ namespace DanskLogistikAPI.DataAccess
         public DbSet<Municipality> municipalities { get; set; }
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Node> Nodes { get; set; }
-
+        public DbSet<SVGSnippet> Snippets { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<Consumer> Consumers { get; set; }
 

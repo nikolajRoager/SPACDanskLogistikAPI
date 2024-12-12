@@ -1,221 +1,198 @@
-using DanskLogistikAPI.Services;
+using DanskLogistikAPI.DataAccess;
+using DanskLogistikAPI.Models;
+using DanskLogistikAPI.Repositories;
 using DanskLogistikAPI.Services.SVGGenerator;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 namespace DanskLogistikAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController(ISVGGenerator MySVGGenerator) : ControllerBase
+    public class LogisticController(ISVGGenerator MySVGGenerator,IMapRepository _MapRepository) : ControllerBase
     {
         private readonly ISVGGenerator MySVGGenerator=MySVGGenerator;
+        private readonly IMapRepository MapRepository=_MapRepository;
 
-        /*
-        [HttpGet]
-        public async Task<ActionResult> GetAllProducts()
-        {
-        }
-*/
-
-
-            /*
-        /// <summary>
-        /// </summary>
-        /// <returns>A list of <see cref="TBD"/> objects representing all .</returns>
-        /// <response code="200">Returns the list of products.</response>
-        /// <response code="500">If an error occurs while retrieving the products.</response>
-        /// <response code="404">Not Found. The product with the specified ID does not exist.</response>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<...>>> GetAllProducts()
-        {
-            try
-            {
-                var products = await _repository.GetAllProductsAsync();
-                List<ProductDto> productDtos = products.Select(_productFactory.CreateProductDto).ToList();
-                return Ok(productDtos);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-            */
-        /*
-        /// <summary>
-        /// Retrieves a product by its ID.
-        /// </summary>
-        /// <param name="id">The ID of the product to retrieve.</param>
-        /// <returns>An ActionResult containing the product with the specified ID.</returns>
-        /// <response code="200">Returns the product with the specified ID.</response>
-        /// <response code="404">Not Found. The product with the specified ID does not exist.</response>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProductDto>> GetProduct(int id)
-        {
-            try
-            {
-                var product = await _repository.GetProductAsync(id);
-
-                if (product == null)
-                {
-                    return NotFound();
-                }
-
-                var productDto = _productFactory.CreateProductDto(product);
-                return Ok(productDto);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
 
         /// <summary>
-        /// Creates a new product.
+        /// Mainly for administration, returns the Map with all municipalities marked as "occupied" by different colours, and all lines and random nodes selected
+        /// Used so a graphics designer can verify that the uploaded map and graphics elements work
         /// </summary>
-        /// <param name="product">The product to create.</param>
-        /// <returns>An ActionResult containing the created product.</returns>
-        /// <response code="201">Created. The product was successfully created.</response>
-        /// <response code="400">Bad Request. The product was not created.</response>
-        [HttpPost]
-        public async Task<ActionResult<ProductDto>> PostProduct(ProductDto product)
+        /// <returns>SVG image content.</returns>
+        /// <response code="200">Returns the SVG map</response>
+        /// <response code="503">The database is missing required data to generate the map</response>
+        [HttpGet("RawMap.svg")]
+        public IActionResult GetSVGMap()
         {
-            var newProduct = await _productFactory.CreateProductAsync(product);
 
-            _repository.Add(newProduct);
-            await _repository.SaveChanges();
-
-            return CreatedAtAction(nameof(GetProduct), new { id = newProduct.Id }, product);
+            var ExampleXml= MySVGGenerator.GetMapString();
+            return Content(ExampleXml,"image/svg+xml");
         }
-
+        
         /// <summary>
-        /// Updates a product by its ID.
+        /// Get list of all SVG snippets (with names and content) stored in database
         /// </summary>
-        /// <param name="id">The ID of the product to update.</param>
-        /// <param name="product">The updated product.</param>
-        /// <returns>An ActionResult containing the updated product.</returns>
-        /// <response code="204">No Content. The product was successfully updated.</response>
-        /// <response code="400">Bad Request. The product was not updated.</response>
-        /// <response code="404">Not Found. The product with the specified ID does not exist.</response>
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ProductDto>> PutProduct(int id, ProductDto product)
+        /// <returns>List of SVG image content.</returns>
+        /// <response code="200">Returns all the SVG snippets</response>
+        /// <response code="204">No SVG images existed</response>
+        [HttpGet("GetSVGs")]
+        public async Task<ActionResult<IEnumerable<SVGSnippet>>> GetSVG()
         {
-            if (id != product.Id)
-            {
-                return BadRequest();
-            }
-            var productToUpdate = await _repository.GetProductAsync(id);
-            if (productToUpdate == null)
-            {
+
+            var Result = await MapRepository.GetAllSnippetsAsync();
+
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+
+        }
+        
+        /// <summary>
+        /// Get SVG snippets by ID (with names and content) stored in database
+        /// </summary>
+        /// <returns>SVG image content.</returns>
+        /// <response code="200">Returns SVG snippets</response>
+        /// <response code="404">Not found </response>
+        [HttpGet("SVG/id/{id}")]
+        public async Task<ActionResult<SVGSnippet>> GetSVG(int id)
+        {
+            var Result = await MapRepository.GetSnippetAsync(id);
+
+            if (Result == null)
                 return NotFound();
-            }
+            else
+                return Ok(Result);
+        }
+        
+        /// <summary>
+        /// Get SVG snippets by Name (with ID and content) stored in database
+        /// </summary>
+        /// <returns>SVG image content.</returns>
+        /// <response code="200">Returns SVG snippets</response>
+        /// <response code="404">Not found </response>
+        
+        [HttpGet("SVG/name/{name}")]
+        public async Task<ActionResult<SVGSnippet>> GetSVG(string name)
+        {
+            var Result = await MapRepository.GetSnippetAsync(name);
 
-            var modifiedProduct = await _productFactory.CreateProductAsync(product);
-
-            productToUpdate.ProductNumber = product.ProductNumber;
-            productToUpdate.Name = product.Name;
-            productToUpdate.Description = product.Description;
-            productToUpdate.StockQuantity = product.StockQuantity;
-            productToUpdate.ProductAttributes = modifiedProduct.ProductAttributes;
-
-            _repository.UpdateProductAsync(productToUpdate);
-
-            try
-            {
-                await _repository.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_repository.ProductExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            if (Result == null)
+                return NotFound();
+            else
+                return Ok(Result);
         }
 
-        /// <summary>
-        /// Deletes a product by its ID.
-        /// </summary>
-        /// <param name="id">The ID of the product to delete.</param>
-        /// <returns>An ActionResult indicating the result of the delete operation.</returns>
-        /// <response code="204">No Content. The product was successfully deleted.</response>
-        /// <response code="404">Not Found. The product with the specified ID does not exist.</response>
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteProduct(int id)
+        //Get the SVG as a viewable SVG outright
+        [HttpGet("SVG/images/{name}.svg")]
+        public async Task<IActionResult> GetSVGDisplayable(string name)
         {
-            var product = await _repository.GetProductAsync(id);
-            if(product == null)
-            { 
-                return NotFound(); 
-            }
-            _repository.Delete(product);
-            await _repository.SaveChanges();
-            
-            return NoContent();
-        }
+            var Result = await MapRepository.GetSnippetAsync(name);
 
-        /// <summary>
-        /// Search function which supports fuzzy search. There is only a single query, which we will search for in the name, category  and description (if the name, category, and description bools are set to do so)
-        /// Be warned that searching description is slow
-        /// 
-        /// The fuzzy level tells us how willing we are to accept misspellings, the Ignore options allow us to accept any case, common typos (like number 0 instead of letter O), dublicate letters (like teling vs telling), or not penalise strings with different length
-        /// 
-        /// The search can also check descriptions for exact matches, or greater than or less than
-        /// 
-        /// The attribute can also refer to StockQuantity or productID
-        /// </summary>
-        /// <param name="Query">String we search for in the description or name, empty query accepts everything (if you only care about attributes)</param>
-        /// <param name="Attributes"> A list containing Key=Value pairs</param>
-        /// <param name="FuzzyLevel">Higher levels let more results through (WARNING HIGHER LEVEL MAKES THE SEARCH SLOWER)</param>
-        /// <param name="IgnoreCase">Consider different cases same</param>
-        /// <param name="IgnoreDuplicates">Disregard duplicate letters in misspelling (common mistake for Dyslexic people)</param>
-        /// <param name="IgnoreLength">Use a constant penalty for different length words, instead of a cost per letter length difference</param>
-        /// <param name="IgnoreCommonTypos">Disregard very common typos, such as swapped b and p or swapped 0 and O</param>
-        /// <param name="Name">Search name for query</param>
-        /// <param name="Description">Also search description. This is MUCH slower than Name, since descriptions tend to be longer</param>
-        /// <returns></returns>
-        [HttpGet("Search")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(
-            [FromQuery] List<string> Attributes,
-            [FromQuery] string Query="",
-            [FromQuery] FuzzyText.FuzzyComparer.Level FuzzyLevel=FuzzyText.FuzzyComparer.Level.Strict,
-            [FromQuery] bool IgnoreCase=true,
-            [FromQuery] bool IgnoreDuplicates=false,
-            [FromQuery] bool Contains=true,
-            [FromQuery] bool IgnoreCommonTypos=false,
-            [FromQuery] bool Name=true,//Search name for the string
-            [FromQuery] bool Description=false//also search description WARNING SLOWER THAN NAME!
-            )
-        {
+            if (Result == null)
+                return NotFound();
+            string Out;
             try
             {
-                var products = await  _service.GetProductByFuzzySearch(Query,
-                    Attributes,
-                    FuzzyLevel,
-                    IgnoreCase,
-                    IgnoreDuplicates,
-                    Contains,
-                    IgnoreCommonTypos,
-                    Name,
-                    Description
-                    );
-
-                if (products == null || products.Count()==0)
-                
-                    return NotFound();
-                else
-                    return Ok(products.Select(_productFactory.CreateProductDto).ToList());
+                Out=await MySVGGenerator.CreateSingleDocument(Result.Content);
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return Problem("Could not convert snippet to SVG, error: "+e.Message);
             }
-        }*/
+
+            return Content(Out,"image/svg+xml");
+
+
+        }
+
+        /// <summary>
+        /// Try uploading this SVG to this name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        /// <response code="201">Created object</response>
+        /// <response code="403">The provided file or data failed one or more tests, or could not be saved</response>
+
+        [HttpPost("SVG/upload")]
+        public async Task<ActionResult<IEnumerable<SVGSnippet>>> PostSVG(string name, IFormFile file)
+        {
+
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+                try
+                {
+                    string content="";
+                    while (reader.Peek() >= 0)
+                        content+=reader.ReadLine();
+                    var New = await MapRepository.AddSnippetAsync(name,content);
+
+                    await MapRepository.SaveChanges();
+                    return CreatedAtAction(nameof(GetSVG), new { Id = New.Id }, New);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+        }
+
+        /// <summary>
+        /// Delete an svg element
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+
+        [HttpDelete("SVG/Delete/{id}")]
+        public async Task<ActionResult> DeleteSVG(int id)
+        {
+            try
+            {
+                await MapRepository.DeleteSnippetAsync(id);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            await MapRepository.SaveChanges();
+            
+            return Ok();
+        }
+
+        /// <summary>
+        /// Http Update function, replace this snippet with the new one
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="New"></param>
+        /// <returns></returns>
+        [HttpPut("Put/{id}")]
+        public async Task<ActionResult<SVGSnippet>> PutSvg(int id, SVGSnippet New)
+        {
+            if (id != New.Id)
+            {
+                return BadRequest();
+            }
+            try
+            {
+                //Call the repository update, and return a variety of errors if saving or finding the product failed
+                var Updated = await MapRepository.UpdateSnippetAsync(New);
+                if (Updated == null)
+                {
+                    return NotFound();
+                }
+                await MapRepository.SaveChanges();
+
+                //If we got here it is ok, return that we modified this, and the destination to get it back
+                return AcceptedAtAction(nameof(GetSVG), new {id=Updated.Id}, Updated);
+            }
+            catch (Exception e)
+            {
+                //This is mainly for debugging, I do not expect an end user to be able to understand this
+                return BadRequest("There was an error updating the SVG, got serverside error: "+e.Message);
+            }
+        }
     }
 
 }

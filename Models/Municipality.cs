@@ -39,6 +39,10 @@
         /// </summary>
         public string Name { get; set; }
 
-        //More data could be inserted as needed, e.g. Population
+        
+        /// <summary>
+        /// SVG path with outline of municipality
+        /// </summary>
+        public SVGSnippet Outline { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using DanskLogistikAPI.DataAccess;
-using DanskLogistikAPI.Services;
+using DanskLogistikAPI.Repositories;
+using DanskLogistikAPI.Services.SVGGenerator;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Injecting services
-builder.Services.AddScoped<ISVGGenerator, ISVGGenerator>();
-
+builder.Services.AddScoped<ISVGGenerator, SVGGenerator>();
+builder.Services.AddScoped<IMapRepository, MapRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers();
