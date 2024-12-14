@@ -1,18 +1,12 @@
-﻿namespace DanskLogistikAPI.Models
+﻿namespace DanskLogistikAPI.DTOs
 {
-    /// <summary>
-    /// The smallest administrative division, named Municipalities like in Denmark, but anything could work
-    /// Used to auto-generate the map
-    /// 
-    /// I take some inspiration from older Paradox Interactive's Strategy games, and this is equivalent to "provinces" (e.g. Counties in CK2, Provinces in EU4, or provinces in Hoi4) 
-    /// </summary>
-    public class Municipality
+    public class MunicipalityDTO
     {
         /// <summary>
         /// Principal tag
         /// </summary>
         public int Id { get; set; }
-        
+
         /// <summary>
         /// De-Jure owner (UN Recognized owner)
         /// 
@@ -20,7 +14,7 @@
         /// 
         /// For example, Crimea is De-Jure owned by Ukraine
         /// </summary>
-        public Country Owner { get; set; } = null!;
+        public int OwnerId { get; set; }
 
         /// <summary>
         /// De-Facto owner 
@@ -29,7 +23,8 @@
         /// 
         /// For example, Crimea is De-Facto owned by Russia
         /// </summary>
-        public Country Controller { get; set; } = null!;
+        public int ControllerId { get; set; }
+
 
         /// <summary>
         /// Name of the municipality
@@ -37,10 +32,5 @@
         /// Is allowed to be multiple words
         /// </summary>
         public string Name { get; set; } = null!;
-
-        /// <summary>
-        /// SVG path with outline of municipality
-        /// </summary>
-        public SVGSnippet Outline { get; set; } = null!;
     }
 }

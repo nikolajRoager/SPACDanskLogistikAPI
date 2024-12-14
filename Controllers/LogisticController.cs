@@ -1,4 +1,5 @@
 using DanskLogistikAPI.DataAccess;
+using DanskLogistikAPI.DTOs;
 using DanskLogistikAPI.Models;
 using DanskLogistikAPI.Repositories;
 using DanskLogistikAPI.Services.SVGGenerator;
@@ -15,6 +16,9 @@ namespace DanskLogistikAPI.Controllers
         private readonly ISVGGenerator MySVGGenerator=MySVGGenerator;
         private readonly IMapRepository MapRepository=_MapRepository;
 
+        
+
+        //Endpoints for SVG snippets, and setup of the map, Mainly for administration
 
         /// <summary>
         /// Mainly for administration, returns the Map with all municipalities marked as "occupied" by different colours, and all lines and random nodes selected
@@ -24,10 +28,10 @@ namespace DanskLogistikAPI.Controllers
         /// <response code="200">Returns the SVG map</response>
         /// <response code="503">The database is missing required data to generate the map</response>
         [HttpGet("RawMap.svg")]
-        public IActionResult GetSVGMap()
+        public async Task<IActionResult> GetSVGMap()
         {
 
-            var ExampleXml= MySVGGenerator.GetMapString();
+            var ExampleXml= await MySVGGenerator.GetMapString();
             return Content(ExampleXml,"image/svg+xml");
         }
         
@@ -119,16 +123,10 @@ namespace DanskLogistikAPI.Controllers
         [HttpPost("SVG/upload")]
         public async Task<ActionResult<IEnumerable<SVGSnippet>>> PostSVG(string name, IFormFile file)
         {
-
-
             using (var reader = new StreamReader(file.OpenReadStream()))
                 try
                 {
-                    string content="";
-                    while (reader.Peek() >= 0)
-                        content+=reader.ReadLine();
-                    var New = await MapRepository.AddSnippetAsync(name,content);
-
+                    var New = await MapRepository.AddSnippetAsync(name,reader);
                     await MapRepository.SaveChanges();
                     return CreatedAtAction(nameof(GetSVG), new { Id = New.Id }, New);
                 }
@@ -159,6 +157,45 @@ namespace DanskLogistikAPI.Controllers
             await MapRepository.SaveChanges();
             
             return Ok();
+        }
+
+        //Wipe entire map
+        [HttpDelete("DeleteAll")]
+        public async Task<ActionResult> DeleteAll()
+        {
+            try
+            {
+                MapRepository.DeleteMap();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            await MapRepository.SaveChanges();
+            
+            return Ok();
+        }
+
+        /// <summary>
+        /// Http Update function, replace the entire map, this obviously deletes all data
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("Map/Upload")]
+        public async Task<ActionResult<SVGSnippet>> PutMap(IFormFile file)
+        {
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+                try
+                {
+                    await MySVGGenerator.LoadMapFromSVG(reader);
+                    await MapRepository.SaveChanges();
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
         }
 
         /// <summary>
@@ -193,6 +230,75 @@ namespace DanskLogistikAPI.Controllers
                 return BadRequest("There was an error updating the SVG, got serverside error: "+e.Message);
             }
         }
-    }
 
+
+        [HttpPatch("Municipalities/{name}/set")]
+        public async Task<ActionResult<MunicipalityDTO>> SetOwner(string name, [FromQuery] string? owner=null, [FromQuery] string? controller=null)
+        {
+            try
+            {
+                MunicipalityDTO Result = MapRepository.setMunicipalityOwner(name, owner, controller);
+                await MapRepository.SaveChanges();
+
+                return Ok(Result);
+            }
+            catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPatch("Municipalities/{country}/occupies")]
+        public async Task<ActionResult<IEnumerable<MunicipalityDTO>>> SetOwner(string country, [FromQuery] List<string> municipalities)
+        {
+            try
+            {
+                List<MunicipalityDTO> Out=new();
+                
+                foreach(var name in municipalities)
+                {
+                    Out.Add(MapRepository.setMunicipalityOwner(name, null, country));
+
+                }
+                await MapRepository.SaveChanges();
+
+                return Ok(Out);
+            }
+            catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
+        [HttpGet("GetMunicipality")]
+        public async Task<ActionResult<IEnumerable<MunicipalityDTO>>> GetMunicipalities()
+        {
+            var Result = await MapRepository.GetAllMunicipalityDTOAsync();
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+        }
+
+        [HttpGet("GetNodes")]
+        public async Task<ActionResult<IEnumerable<NodeDTO>>> GetNodes()
+        {
+            var Result = await MapRepository.GetAllNodeDTOAsync();
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+        }
+
+        [HttpGet("GetCountries")]
+        public async Task<ActionResult<IEnumerable<NodeDTO>>> GetCountries()
+        {
+            var Result = await MapRepository.GetAllCountryDTOAsync();
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+        }
+    }
 }

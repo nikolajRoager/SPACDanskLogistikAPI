@@ -26,6 +26,6 @@
         /// <summary>
         /// Warehouses are also registered as Consumers, allowing them to RECEIVE products
         /// </summary>
-        public Consumer? Consumer { get; set; }
+        public Consumer Consumer { get; set; } = null!;
     }
 }

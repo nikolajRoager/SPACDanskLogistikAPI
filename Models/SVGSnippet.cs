@@ -19,8 +19,10 @@ namespace DanskLogistikAPI.Models
         /// <summary>
         /// Name of object for searching, this should also be the id attribute of the Node containing the actual display data
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
-        public string Content {get; set;}
+        public string Content { get; set; } = null!;
+
+        public SVGSnippet() { }
     }
 }

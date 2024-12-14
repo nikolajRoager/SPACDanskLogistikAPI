@@ -1,4 +1,4 @@
-﻿namespace DanskLogistikAPI.Models
+﻿namespace DanskLogistikAPI.DTOs
 {
     /// <summary>
     /// A node in the transport network, and a valid place for consumers and warehouses to be
@@ -6,7 +6,7 @@
     /// 
     /// Does NOT include physical location, as that is not needed in this database, all information about transportation distance or time is stored by the connection class
     /// </summary>
-    public class Node
+    public class NodeDTO
     {
         public bool isAirport {  get; set; }
 
@@ -19,14 +19,11 @@
         /// Where is this node located
         /// Can be used to access municipality-wide stats, such as who owns this
         /// </summary>
-        public Municipality Location { get; set; } = null!;
+        public int LocationId { get; set; }
 
         /// <summary>
         /// Oft the name of the city, need not be unique 
         /// </summary>
         public string Name { get; set; } = null!;
-
-        public float x { get; set; }
-        public float y { get; set; }
     }
 }

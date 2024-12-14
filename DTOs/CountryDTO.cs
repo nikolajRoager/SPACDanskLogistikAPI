@@ -1,9 +1,7 @@
-﻿namespace DanskLogistikAPI.Models
+﻿namespace DanskLogistikAPI.DTOs
 {
-    /// <summary>
-    /// Someone who can own and control municipalities
-    /// </summary>
-    public class Country
+
+    public class CountryDTO
     {
         /// <summary>
         /// Principal tag
@@ -20,12 +18,8 @@
         /// </summary>
         public string Name { get; set; } = null!;
 
-        /// <summary>
-        /// SVG path with colour and outline of the entire country's legally recognized territory
-        /// This may differ from de-facto territory
-        /// </summary>
-        public SVGSnippet DeJureOutline { get; set; } = null!;
-
         public bool Access {  get; set; }
+
+        public int DeJureOutlineId { get; set; }
     }
 }

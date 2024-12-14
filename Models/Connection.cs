@@ -21,11 +21,11 @@ namespace DanskLogistikAPI.Models
         /// <summary>
         /// Node at one end, the order of A and B does not matter
         /// </summary>
-        public Node A { get; set; }
+        public Node A { get; set; } = null!;
         /// <summary>
         /// Node at one end, the order of A and B does not matter
         /// </summary>
-        public Node B { get; set; }
+        public Node B { get; set; } = null!;
         
         /// <summary>
         /// What type of connection is this? Used for display, information and pathfinding purposes

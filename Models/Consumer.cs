@@ -15,6 +15,6 @@
         /// <summary>
         /// Human Friendly Name
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 }

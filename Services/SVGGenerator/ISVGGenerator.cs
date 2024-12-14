@@ -9,14 +9,14 @@ namespace DanskLogistikAPI.Services.SVGGenerator
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public string GetMapString(/*Insert SVG arguments: Occupation, current position, current path*/);
+        public Task<string> GetMapString(/*Insert SVG arguments: Occupation, current position, current path*/);
 
         /// <summary>
         /// Overwrite the map database from an inkscape SVG (throw errors if any information is missing or corrupted)
         /// </summary>
         /// <param name="SVGData">Must be an INKSCAPE document obeying the detailedrequiremennts in the manual</param>
         /// <exception cref="NotImplementedException"></exception>
-        public void LoadMapFromSVG(StreamReader SVGData);
+        public Task LoadMapFromSVG(StreamReader SVGData);
 
 
         /// <summary>
