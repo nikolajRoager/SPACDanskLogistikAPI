@@ -5,16 +5,18 @@ using DanskLogistikAPI.Repositories;
 using DanskLogistikAPI.Services.SVGGenerator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.OpenApi.Models;
 
 namespace DanskLogistikAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LogisticController(ISVGGenerator MySVGGenerator,IMapRepository _MapRepository) : ControllerBase
+    public class LogisticController(ISVGGenerator MySVGGenerator,IMapRepository _MapRepository, IPathfinder _pathfinder) : ControllerBase
     {
         private readonly ISVGGenerator MySVGGenerator=MySVGGenerator;
         private readonly IMapRepository MapRepository=_MapRepository;
+        private readonly IPathfinder pathfinder = _pathfinder;
 
         
 
@@ -60,7 +62,7 @@ namespace DanskLogistikAPI.Controllers
         /// <returns>SVG image content.</returns>
         /// <response code="200">Returns SVG snippets</response>
         /// <response code="404">Not found </response>
-        [HttpGet("SVG/id/{id}")]
+        [HttpGet("SVG/get/{id}")]
         public async Task<ActionResult<SVGSnippet>> GetSVG(int id)
         {
             var Result = await MapRepository.GetSnippetAsync(id);
@@ -188,6 +190,7 @@ namespace DanskLogistikAPI.Controllers
             using (var reader = new StreamReader(file.OpenReadStream()))
                 try
                 {
+                    MapRepository.DeleteMap();
                     await MySVGGenerator.LoadMapFromSVG(reader);
                     await MapRepository.SaveChanges();
                     return Ok();
@@ -230,6 +233,8 @@ namespace DanskLogistikAPI.Controllers
                 return BadRequest("There was an error updating the SVG, got serverside error: "+e.Message);
             }
         }
+
+
 
 
         [HttpPatch("Municipalities/{name}/set")]
@@ -299,6 +304,58 @@ namespace DanskLogistikAPI.Controllers
                 return NoContent();
             else
                 return Ok(Result);
+        }
+
+
+        [HttpGet("GetConnections")]
+        public async Task<ActionResult<IEnumerable<ConnectionDTO>>> GetConnections()
+        {
+            var Result = await MapRepository.GetAllConnectionDTOAsync();
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+        }
+        [HttpGet("GetConnectionMaps")]
+        public async Task<ActionResult<IEnumerable<NodeMappingDTO>>> GetConnectionMaps()
+        {
+            var Result = await MapRepository.GetAllNodeMappingDTOAsync();
+            if (Result.Count() == 0)
+                return NoContent();
+            else
+                return Ok(Result);
+        }
+
+
+        [HttpGet("Connections/Get/{id}")]
+        public async Task<ActionResult<ConnectionDTO>> GetConnection(int id)
+        {
+            var Result = await MapRepository.GetConnectionDTOAsync(id);
+
+            if (Result == null)
+                return NotFound();
+            else
+                return Ok(Result);
+        }
+
+        [HttpGet("Pathfind")]
+        public async Task<ActionResult<ConnectionDTO>> Pathfind([FromQuery] string Start, [FromQuery]string Stop,[FromQuery] DateTime? StartTime)
+        {
+            //If no time was supplied, use server time now
+            if (StartTime == null)
+                StartTime = DateTime.Now;
+
+            try
+            {
+                pathfinder.findPath(Start,Stop,(DateTime)StartTime);
+            }
+            catch (Exception e)
+            {
+                return Problem("Could not convert snippet to SVG, error: "+e.Message);
+            }
+
+            return Ok();
+
         }
     }
 }

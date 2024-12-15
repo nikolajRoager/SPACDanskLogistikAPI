@@ -38,11 +38,20 @@ namespace DanskLogistikAPI.Repositories
         /// <returns></returns>
         public IQueryable<Country> GetAllCountry();
 
+
+        /// <summary>
+        /// Return all connections
+        /// </summary>
+        /// <returns></returns>
+        public IQueryable<Connection> GetAllConnection();
+
         /// <summary>
         /// Return all nodes
         /// </summary>
         /// <returns></returns>
         public Task<IEnumerable<NodeDTO>> GetAllNodeDTOAsync();
+
+        public Task<IEnumerable<NodeMappingDTO>> GetAllNodeMappingDTOAsync();
 
         /// <summary>
         /// Return all municipalities
@@ -55,6 +64,13 @@ namespace DanskLogistikAPI.Repositories
         /// </summary>
         /// <returns></returns>
         public Task<IEnumerable<CountryDTO>> GetAllCountryDTOAsync();
+
+        /// <summary>
+        /// Return all countries
+        /// </summary>
+        /// <returns></returns>
+        public Task<IEnumerable<ConnectionDTO>> GetAllConnectionDTOAsync();
+
 
         /// <summary>
         /// Return all SVG snippets
@@ -75,6 +91,14 @@ namespace DanskLogistikAPI.Repositories
         /// <param name="Id"></param>
         /// <returns></returns>
         public Task<SVGSnippet?> GetSnippetAsync(string Name);
+
+        /// <summary>
+        /// Get Connection DTO by id
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        public Task<ConnectionDTO?> GetConnectionDTOAsync(int Id);
+
 
         /// <summary>
         /// Add to repository after verifying that
@@ -120,10 +144,41 @@ namespace DanskLogistikAPI.Repositories
 
 
 
+
+        /// <summary>
+        /// Try adding this SVG snippet, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public Task<SVGSnippet> AddOrUpdateSnippetAsync(SVGSnippet input);
+
+        /// <summary>
+        /// Try adding this Node, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public Task<Node> AddOrUpdateNodeAsync(Node input);
+
+        /// <summary>
+        /// Try adding this municipality, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public Task<Municipality> AddOrUpdateMunicipalityAsync(Municipality input);
+
+        /// <summary>
+        /// Try adding this country, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public Task<Country> AddOrUpdateCountryAsync(Country input);
+
+        /// <summary>
+        /// Try adding this connection, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public Task<Connection> AddOrUpdateConnectionAsync(Connection input);
 
     }
 
@@ -179,7 +234,31 @@ namespace DanskLogistikAPI.Repositories
                 Name = C.Name,
                 Access = C.Access,
                 DeJureOutlineId = C.DeJureOutline.Id
+            };
+        }
 
+        public static NodeMappingDTO ToDTO(NodeMapping M)
+        {
+            return new NodeMappingDTO
+            {
+                Id = M.Id,
+                ConnectionId = M.Id,
+                EndId=M.End.Id
+            };
+        }
+
+        public static ConnectionDTO ToDTO(Connection C)
+        {
+            return new ConnectionDTO
+            {
+                Id = C.Id,
+                Name = C.Name,
+                AId = C.A.Id,
+                BId = C.B.Id,
+                AName = C.A.Name,
+                BName = C.B.Name,
+                mode=C.mode,
+                Time=C.Time
             };
         }
 
@@ -204,6 +283,17 @@ namespace DanskLogistikAPI.Repositories
             return context.municipalities.Include(m => m.Owner).Include(m => m.Controller).Include(m=> m.Outline).AsQueryable();
         }
 
+        public IQueryable<Connection> GetAllConnection()
+        {
+            return context.Connections
+                .Include(C => C.A).ThenInclude(N => N.Location).ThenInclude(M => M.Owner)
+                .Include(C => C.B).ThenInclude(N => N.Location).ThenInclude(M => M.Owner)
+                .Include(C => C.A).ThenInclude(N => N.Location).ThenInclude(M => M.Controller)
+                .Include(C => C.B).ThenInclude(N => N.Location).ThenInclude(M => M.Controller)
+                .AsQueryable();
+        }
+
+
         /// <summary>
         /// Return all countries
         /// </summary>
@@ -214,12 +304,32 @@ namespace DanskLogistikAPI.Repositories
         }
 
         /// <summary>
-        /// Return all SVG snippets
+        /// Return all SVG snippets, as queryable, including both de-jure and de-factor owners
         /// </summary>
         /// <returns></returns>
-        public  IQueryable<Node> GetAllNode()
+        public IQueryable<Node> GetAllNode()
         {
-            return context.Nodes.Include(N => N.Location).AsQueryable();
+            return context.Nodes
+                .Include(N => N.Location).ThenInclude(M => M.Owner)
+                .Include(N => N.Location).ThenInclude(M => M.Controller)
+                .Include(N => N.Neighbors)
+                .Include(N => N.Neighbors).ThenInclude(Map => Map.Connection).AsQueryable();
+
+
+        }
+
+        public async Task<IEnumerable<NodeMappingDTO>> GetAllNodeMappingDTOAsync()
+        {
+            return await context.NodeMapping.Include(M => M.End).Select(M => ToDTO(M)).ToListAsync();
+        }
+
+        /// <summary>
+        /// Return all Connections
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<ConnectionDTO>> GetAllConnectionDTOAsync()
+        {
+            return await (context.Connections.Include(C => C.A).Include(C => C.B)).Select(C => ToDTO(C)).ToListAsync();
         }
 
         /// <summary>
@@ -463,7 +573,7 @@ namespace DanskLogistikAPI.Repositories
                 }
                 catch (Exception E)
                 {
-                    throw new Exception($"Error saving the SVG object: ({E.Message})");
+                    throw new Exception($"Error saving the node: ({E.Message})");
                 }
                 return input;
             }
@@ -492,7 +602,7 @@ namespace DanskLogistikAPI.Repositories
                 }
                 catch (Exception E)
                 {
-                    throw new Exception($"Error saving the SVG object: ({E.Message})");
+                    throw new Exception($"Error saving the municipality: ({E.Message})");
                 }
                 return input;
             }
@@ -520,12 +630,48 @@ namespace DanskLogistikAPI.Repositories
                 }
                 catch (Exception E)
                 {
+                    throw new Exception($"Error saving the country: ({E.Message})");
+                }
+                return input;
+            }
+        }
+
+        /// <summary>
+        /// Try adding this connection, if something else with the same name exist, update that instead
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async Task<Connection> AddOrUpdateConnectionAsync(Connection input)
+        {
+            var Entity = await context.Connections.FirstOrDefaultAsync(a => a.Name == input.Name);
+            if (Entity != null)
+            {
+                context.Connections.Entry(Entity).State = EntityState.Modified;
+                Entity.Name = input.Name;
+                Entity.A = input.A;
+                Entity.B = input.B;
+                Entity.Time = input.Time;
+                Entity.mode = input.mode;
+                return Entity;
+            }
+            else
+            {
+                //Then add it to the back
+                try
+                {
+                    await context.Connections.AddAsync(input);
+                    //Now save, that is up to whoever called this
+                    //await context.SaveChangesAsync();
+                }
+                catch (Exception E)
+                {
                     throw new Exception($"Error saving the SVG object: ({E.Message})");
                 }
                 return input;
             }
 
         }
+
 
 
         /// <summary>
@@ -618,6 +764,12 @@ namespace DanskLogistikAPI.Repositories
             }
 
             return ToDTO(M);
+        }
+
+        public async Task<ConnectionDTO?> GetConnectionDTOAsync(int Id)
+        {
+            var This = await context.Connections.FirstOrDefaultAsync(x => x.Id == Id);
+            return (This==null?null :ToDTO(This));
         }
     }
 }

@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Injecting services
 builder.Services.AddScoped<ISVGGenerator, SVGGenerator>();
 builder.Services.AddScoped<IMapRepository, MapRepository>();
+builder.Services.AddScoped<IPathfinder, Pathfinder>();
 
 // Add services to the container.
 builder.Services.AddControllers();

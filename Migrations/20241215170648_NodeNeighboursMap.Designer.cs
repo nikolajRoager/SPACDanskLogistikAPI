@@ -4,6 +4,7 @@ using DanskLogistikAPI.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DanskLogistikAPI.Migrations
 {
     [DbContext(typeof(LogisticContext))]
-    partial class LogisticContextModelSnapshot : ModelSnapshot
+    [Migration("20241215170648_NodeNeighboursMap")]
+    partial class NodeNeighboursMap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,16 +185,11 @@ namespace DanskLogistikAPI.Migrations
                     b.Property<int>("EndId")
                         .HasColumnType("int");
 
-                    b.Property<int>("StartId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ConnectionId");
 
                     b.HasIndex("EndId");
-
-                    b.HasIndex("StartId");
 
                     b.ToTable("NodeMapping");
                 });
@@ -320,22 +318,14 @@ namespace DanskLogistikAPI.Migrations
                         .IsRequired();
 
                     b.HasOne("DanskLogistikAPI.Models.Node", "End")
-                        .WithMany()
-                        .HasForeignKey("EndId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DanskLogistikAPI.Models.Node", "Start")
                         .WithMany("Neighbors")
-                        .HasForeignKey("StartId")
+                        .HasForeignKey("EndId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Connection");
 
                     b.Navigation("End");
-
-                    b.Navigation("Start");
                 });
 
             modelBuilder.Entity("DanskLogistikAPI.Models.Warehouse", b =>

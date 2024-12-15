@@ -28,5 +28,8 @@
 
         public float x { get; set; }
         public float y { get; set; }
+
+        //Neighbouring nodes, and respective connections
+        public ICollection<NodeMapping> Neighbors= null!;
     }
 }

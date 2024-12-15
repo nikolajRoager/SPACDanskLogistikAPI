@@ -4,6 +4,7 @@ using DanskLogistikAPI.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DanskLogistikAPI.Migrations
 {
     [DbContext(typeof(LogisticContext))]
-    partial class LogisticContextModelSnapshot : ModelSnapshot
+    [Migration("20241215174208_NodeNeighboursMapFix")]
+    partial class NodeNeighboursMapFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -193,7 +196,7 @@ namespace DanskLogistikAPI.Migrations
 
                     b.HasIndex("StartId");
 
-                    b.ToTable("NodeMapping");
+                    b.ToTable("NodeMappings");
                 });
 
             modelBuilder.Entity("DanskLogistikAPI.Models.SVGSnippet", b =>
