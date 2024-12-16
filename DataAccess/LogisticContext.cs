@@ -57,7 +57,7 @@ namespace DanskLogistikAPI.DataAccess
                 entity.HasOne(entity => entity.Connection);
             });
 
-            modelBuilder.Entity<Warehouse>(entity =>
+            modelBuilder.Entity<ProductSource>(entity =>
             {
                 entity.HasKey(W => W.Id);
                 entity.Property(W => W.Name).HasMaxLength(64).IsRequired(false);
@@ -83,7 +83,7 @@ namespace DanskLogistikAPI.DataAccess
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Node> Nodes { get; set; }
         public DbSet<SVGSnippet> Snippets { get; set; }
-        public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<ProductSource> Warehouses { get; set; }
         public DbSet<Consumer> Consumers { get; set; }
         public DbSet<NodeMapping> NodeMapping { get; set; }
 

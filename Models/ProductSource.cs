@@ -3,7 +3,7 @@
     /// <summary>
     /// A warehouse contains any number of products at a fixed location, Products can be send FROM warehouses
     /// </summary>
-    public class Warehouse
+    public class ProductSource
     {
         /// <summary>
         /// Principal ID
@@ -21,11 +21,6 @@
         /// <summary>
         /// Where are we physically connected to the network?
         /// </summary>
-        public int NodeId { get; set; }
-
-        /// <summary>
-        /// Warehouses are also registered as Consumers, allowing them to RECEIVE products
-        /// </summary>
-        public Consumer Consumer { get; set; } = null!;
+        public Node Location { get; set; } = null!;
     }
 }

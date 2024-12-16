@@ -339,7 +339,7 @@ namespace DanskLogistikAPI.Controllers
         }
 
         [HttpGet("Pathfind")]
-        public async Task<ActionResult<ConnectionDTO>> Pathfind([FromQuery] string Start, [FromQuery]string Stop,[FromQuery] DateTime? StartTime)
+        public async Task<ActionResult<TicketDTO>> Pathfind([FromQuery] string Start, [FromQuery]string Stop,[FromQuery] DateTime? StartTime=null,[FromQuery] bool allowFly=true, [FromQuery] bool allowSea=true, [FromQuery] bool allowRail=true, [FromQuery] bool allowRoad=true)
         {
             //If no time was supplied, use server time now
             if (StartTime == null)
@@ -347,14 +347,19 @@ namespace DanskLogistikAPI.Controllers
 
             try
             {
-                pathfinder.findPath(Start,Stop,(DateTime)StartTime);
+                var result =await pathfinder.findPath(Start,Stop,(DateTime)StartTime,allowFly,allowSea,allowRail,allowRoad);
+                if (result == null)
+                    return BadRequest("No path sattisfies the conditions");
+                else
+                {
+                    var ticket = new TicketDTO(result);
+                    return Ok(ticket);
+                }
             }
             catch (Exception e)
             {
-                return Problem("Could not convert snippet to SVG, error: "+e.Message);
+                return Problem("Pathfinder returned error: "+e.Message);
             }
-
-            return Ok();
 
         }
     }

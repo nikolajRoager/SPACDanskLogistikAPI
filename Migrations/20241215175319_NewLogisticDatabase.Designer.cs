@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DanskLogistikAPI.Migrations
 {
     [DbContext(typeof(LogisticContext))]
-    [Migration("20241213090316_NodeLocation")]
-    partial class NodeLocation
+    [Migration("20241215175319_NewLogisticDatabase")]
+    partial class NewLogisticDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,6 +87,9 @@ namespace DanskLogistikAPI.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Access")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("DeJureOutlineId")
                         .HasColumnType("int");
@@ -166,6 +169,34 @@ namespace DanskLogistikAPI.Migrations
                     b.HasIndex("LocationId");
 
                     b.ToTable("Nodes");
+                });
+
+            modelBuilder.Entity("DanskLogistikAPI.Models.NodeMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EndId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectionId");
+
+                    b.HasIndex("EndId");
+
+                    b.HasIndex("StartId");
+
+                    b.ToTable("NodeMapping");
                 });
 
             modelBuilder.Entity("DanskLogistikAPI.Models.SVGSnippet", b =>
@@ -283,6 +314,33 @@ namespace DanskLogistikAPI.Migrations
                     b.Navigation("Location");
                 });
 
+            modelBuilder.Entity("DanskLogistikAPI.Models.NodeMapping", b =>
+                {
+                    b.HasOne("DanskLogistikAPI.Models.Connection", "Connection")
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DanskLogistikAPI.Models.Node", "End")
+                        .WithMany()
+                        .HasForeignKey("EndId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DanskLogistikAPI.Models.Node", "Start")
+                        .WithMany("Neighbors")
+                        .HasForeignKey("StartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("End");
+
+                    b.Navigation("Start");
+                });
+
             modelBuilder.Entity("DanskLogistikAPI.Models.Warehouse", b =>
                 {
                     b.HasOne("DanskLogistikAPI.Models.Consumer", "Consumer")
@@ -292,6 +350,11 @@ namespace DanskLogistikAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Consumer");
+                });
+
+            modelBuilder.Entity("DanskLogistikAPI.Models.Node", b =>
+                {
+                    b.Navigation("Neighbors");
                 });
 #pragma warning restore 612, 618
         }

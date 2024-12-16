@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DanskLogistikAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class NewLogisticDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,20 +32,19 @@ namespace DanskLogistikAPI.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Countries",
+                name: "Snippets",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    B = table.Column<sbyte>(type: "tinyint", nullable: false),
-                    G = table.Column<sbyte>(type: "tinyint", nullable: false),
-                    R = table.Column<sbyte>(type: "tinyint", nullable: false)
+                    Content = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Countries", x => x.Id);
+                    table.PrimaryKey("PK_Snippets", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -58,7 +57,7 @@ namespace DanskLogistikAPI.Migrations
                     Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NodeId = table.Column<int>(type: "int", nullable: false),
-                    ConsumerId = table.Column<int>(type: "int", nullable: true)
+                    ConsumerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -67,7 +66,31 @@ namespace DanskLogistikAPI.Migrations
                         name: "FK_Warehouses_Consumers_ConsumerId",
                         column: x => x.ConsumerId,
                         principalTable: "Consumers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Countries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DeJureOutlineId = table.Column<int>(type: "int", nullable: false),
+                    Access = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Countries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Countries_Snippets_DeJureOutlineId",
+                        column: x => x.DeJureOutlineId,
+                        principalTable: "Snippets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -80,7 +103,8 @@ namespace DanskLogistikAPI.Migrations
                     OwnerId = table.Column<int>(type: "int", nullable: false),
                     ControllerId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OutlineId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -97,6 +121,12 @@ namespace DanskLogistikAPI.Migrations
                         principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_municipalities_Snippets_OutlineId",
+                        column: x => x.OutlineId,
+                        principalTable: "Snippets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -106,9 +136,12 @@ namespace DanskLogistikAPI.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    isAirport = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    x = table.Column<float>(type: "float", nullable: false),
+                    y = table.Column<float>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -130,7 +163,7 @@ namespace DanskLogistikAPI.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     AId = table.Column<int>(type: "int", nullable: false),
                     BId = table.Column<int>(type: "int", nullable: false),
-                    mode = table.Column<int>(type: "int", nullable: false),
+                    mode = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     Name = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Time = table.Column<TimeSpan>(type: "time(6)", nullable: true)
@@ -153,6 +186,40 @@ namespace DanskLogistikAPI.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "NodeMapping",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ConnectionId = table.Column<int>(type: "int", nullable: false),
+                    StartId = table.Column<int>(type: "int", nullable: false),
+                    EndId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NodeMapping", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NodeMapping_Connections_ConnectionId",
+                        column: x => x.ConnectionId,
+                        principalTable: "Connections",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_NodeMapping_Nodes_EndId",
+                        column: x => x.EndId,
+                        principalTable: "Nodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_NodeMapping_Nodes_StartId",
+                        column: x => x.StartId,
+                        principalTable: "Nodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Connections_AId",
                 table: "Connections",
@@ -164,14 +231,39 @@ namespace DanskLogistikAPI.Migrations
                 column: "BId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Countries_DeJureOutlineId",
+                table: "Countries",
+                column: "DeJureOutlineId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_municipalities_ControllerId",
                 table: "municipalities",
                 column: "ControllerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_municipalities_OutlineId",
+                table: "municipalities",
+                column: "OutlineId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_municipalities_OwnerId",
                 table: "municipalities",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeMapping_ConnectionId",
+                table: "NodeMapping",
+                column: "ConnectionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeMapping_EndId",
+                table: "NodeMapping",
+                column: "EndId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeMapping_StartId",
+                table: "NodeMapping",
+                column: "StartId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Nodes_LocationId",
@@ -188,22 +280,28 @@ namespace DanskLogistikAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Connections");
+                name: "NodeMapping");
 
             migrationBuilder.DropTable(
                 name: "Warehouses");
 
             migrationBuilder.DropTable(
-                name: "Nodes");
+                name: "Connections");
 
             migrationBuilder.DropTable(
                 name: "Consumers");
+
+            migrationBuilder.DropTable(
+                name: "Nodes");
 
             migrationBuilder.DropTable(
                 name: "municipalities");
 
             migrationBuilder.DropTable(
                 name: "Countries");
+
+            migrationBuilder.DropTable(
+                name: "Snippets");
         }
     }
 }

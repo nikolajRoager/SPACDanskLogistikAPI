@@ -47,6 +47,6 @@ namespace DanskLogistikAPI.Models
         /// 
         /// this system DOES NOT understand that shipments happen on individual trains, trucks or planes which may depart at fixed times
         /// </summary>
-        public TimeSpan? Time { get; set; }
+        public TimeSpan Time { get; set; }
     }
 }

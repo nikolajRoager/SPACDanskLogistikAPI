@@ -312,7 +312,7 @@ namespace DanskLogistikAPI.Repositories
             return context.Nodes
                 .Include(N => N.Location).ThenInclude(M => M.Owner)
                 .Include(N => N.Location).ThenInclude(M => M.Controller)
-                .Include(N => N.Neighbors)
+                .Include(N => N.Neighbors).ThenInclude(M => M.End)
                 .Include(N => N.Neighbors).ThenInclude(Map => Map.Connection).AsQueryable();
 
 

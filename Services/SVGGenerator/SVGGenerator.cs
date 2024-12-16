@@ -48,20 +48,30 @@ namespace DanskLogistikAPI.Services.SVGGenerator
             if (occupiedSnippet == null)
                 throw new Exception($"template svg snippet \"occupied\" was missing");
 
-
+            
             var railSnippet = await mapRepository.GetSnippetAsync("Rail");
             var roadSnippet = await mapRepository.GetSnippetAsync("Road");
             var seaSnippet = await mapRepository.GetSnippetAsync("Sea");
             var airSnippet = await mapRepository.GetSnippetAsync("Air");
+            var drailSnippet = await mapRepository.GetSnippetAsync("RailDeSelect");
+            var droadSnippet = await mapRepository.GetSnippetAsync("RoadDeSelect");
+            var dseaSnippet = await mapRepository.GetSnippetAsync("SeaDeSelect");
+
 
             if (railSnippet == null)
-                throw new Exception($"template svg snippet \"Rail\" was missing");
+                throw new Exception($"template svg snippet \"RailDeSelect\" was missing");
             if (roadSnippet == null)
-                throw new Exception($"template svg snippet \"Road\" was missing");
+                throw new Exception($"template svg snippet \"RoadDeSelect\" was missing");
             if (seaSnippet == null)
-                throw new Exception($"template svg snippet \"Sea\" was missing");
+                throw new Exception($"template svg snippet \"SeaDeSelect\" was missing");
             if (airSnippet == null)
-                throw new Exception($"template svg snippet \"Air\" was missing");
+                throw new Exception($"template svg snippet \"AirDeSelect\" was missing");
+            if (drailSnippet == null)
+                throw new Exception($"template svg snippet \"RailDeSelect\" was missing");
+            if (droadSnippet == null)
+                throw new Exception($"template svg snippet \"RoadDeSelect\" was missing");
+            if (dseaSnippet == null)
+                throw new Exception($"template svg snippet \"SeaDeSelect\" was missing");
 
             foreach (Municipality M in Municipalities)
             {
@@ -468,7 +478,7 @@ namespace DanskLogistikAPI.Services.SVGGenerator
                                     A = A,
                                     B = B,
                                     mode = type,
-                                    Name = (Name == null ? $"{type}: {NodeA}, {NodeB}" : Name),
+                                    Name = Name,
                                     Time = TimeSpan.FromHours(dist / speed)
                                 };
                                 NewConnections.Add(Con);
@@ -513,7 +523,7 @@ namespace DanskLogistikAPI.Services.SVGGenerator
                         A = A,
                         B = B,
                         mode = Connection.Mode.Air,
-                        Name = $"Plane between {B.Name} and {B.Name}",
+                        Name = null,
                         Time = TimeSpan.FromHours(dist / airSpeed)
                     };
                     NewConnections.Add(Con);
@@ -621,9 +631,6 @@ namespace DanskLogistikAPI.Services.SVGGenerator
             await addDef("node");
             await addDef("nodeOccupied");
             await addDef("airplane");
-            await addDef("rail");
-            await addDef("road");
-            await addDef("sea");
 
 
             //We will need one occupation definition per country, this will be based on the occupation template, but we will need to extract and use the colour from the country background
